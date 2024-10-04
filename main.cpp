@@ -3,6 +3,7 @@
 #include <iomanip>
 #include <algorithm>
 #include <cmath>
+#include <regex>
 using namespace std;
 
 int PRECISION;
@@ -235,23 +236,52 @@ void makeBasicColumn(Matrix& table, int basic_row, int basic_col) {
     }
 }
 
+// Basic test
+// 3 6 1
+// 2 3 0 -1 0 0 0
+// 2 -1 0 -2 1 0 16
+// 3 2 1 -3 0 0 18
+// -1 3 0 4 0 1 24
+
 
 int main() {
     int n_constrains, n_var;
     cin >> n_constrains >> n_var >> PRECISION;
 
-    Matrix table(1 + n_constrains, n_var);
+    Matrix table(1 + n_constrains, n_var + 1);
     cin >> table;
 
     // Make Z coeff negative
+
+
     for (int i = 0; i < n_var; i++) {
         table.matrixData[0][i] *= -1;
     }
+    // cout << table;
 
-    makeBasicColumn(table, 3, 1);
-    makeBasicColumn(table, 2, 0);
+    for (int _ = 0; _ < n_constrains; _++) {
+        int basic_col = -1;
+        int min_col = 0;
+        for (int i = 0; i < n_var; i++) {
+            if (table.matrixData[0][i] < min_col) {
+                min_col = table.matrixData[0][i];
+                basic_col = i;
+            }
+        }
+        if (basic_col == -1) break;
+        int basic_row = 0;
+        int min_ratio = pow(10, 10);
+        for (int i = 1; i < n_constrains+1; i++) {
+            if (table.matrixData[i][n_var] / table.matrixData[i][basic_col] < min_ratio &&
+                table.matrixData[i][n_var] / table.matrixData[i][basic_col] > 0) {
+                basic_row = i;
+                min_ratio = table.matrixData[i][n_var] / table.matrixData[i][basic_col];
+                }
+        }
+        if (basic_row == 0) break;
+        // cout << basic_col << ' ' << basic_row << '\n';
+        makeBasicColumn(table, basic_row, basic_col);
+        // cout << table;
+    }
     cout << table;
-
-
-
 }
