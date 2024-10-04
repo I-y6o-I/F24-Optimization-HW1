@@ -5,6 +5,8 @@
 #include <cmath>
 using namespace std;
 
+int PRECISION;
+
 class Matrix {
 protected:
     int n, m;
@@ -24,7 +26,7 @@ public:
     friend ostream& operator<<(ostream& out, const Matrix& matrix) {
         for (int i = 0; i < matrix.n; ++i) {
             for (int j = 0; j < matrix.m; ++j) {
-                out << fixed << setprecision(4) << matrix.matrixData[i][j];
+                out << fixed << setprecision(PRECISION) << matrix.matrixData[i][j];
                 if (j != matrix.m - 1) {
                     out << " ";
                 }
@@ -100,6 +102,9 @@ public:
         return newMatrix;
     }
 
+    int getRows() const { return n; }
+
+    int getColumns() const { return m; }
 };
 
 class SquareMatrix : public Matrix {
@@ -208,285 +213,45 @@ public:
     };
 };
 
-
-int main()
-{
-    int n;
-    cin >> n;
-    SquareMatrix A(n);
-    cin >> A;
-    SquareMatrix Lower(n);
-    SquareMatrix Upper(n);
-    SquareMatrix Diagonal(n);
-    int m;
-    cin >> m;
-    Matrix b(m, 1);
-    cin >> b;
-    double epsStart; cin >> epsStart;
-    for (int i = 0; i < n; i++) {
-        Diagonal.matrixData[i][i] = A.matrixData[i][i];
-    }
-    for (int i = 0; i < n; i++) {
-        for (int j = i + 1; j < n; j++) {
-            Upper.matrixData[i][j] = A.matrixData[i][j];
-        }
-    }
-    for (int i = 0; i < n; i++) {
-        for (int j = i + 1; j < n; j++) {
-            Lower.matrixData[j][i] = A.matrixData[j][i];
-        }
-    }
-    SquareMatrix A1 = Diagonal;
-    int countPerm = 0;
-    for (int i = 0; i < n; i++) {
-        int IndMaxEl = i;
-        double maxEl = abs(A1.matrixData[i][i]);
-        for (int j = i + 1; j < n; j++) {
-            if (abs(A1.matrixData[j][i]) > maxEl) {
-                IndMaxEl = j;
-                maxEl = abs(A1.matrixData[j][i]);
-            }
-        }
-        if (IndMaxEl > i) {
-
-            SquareMatrix P = PermutationMatrix(n, i + 1, IndMaxEl + 1);
-            SquareMatrix* temp = P * A1;
-            A1 = *temp;
-            countPerm++;
-        }
-        for (int j = i + 1; j < n; j++) {
-            if (A1.matrixData[j][i] != 0) {
-                SquareMatrix E = EliminationMatrix(n, j + 1, i + 1, A1);
-                SquareMatrix* temp = E * A1;
-                A1 = *temp;
-            }
-        }
-    }
-    double ans = 1;
-    for (int i = 0; i < n; i++) {
-        ans *= A1.matrixData[i][i];
-    }
-    if (countPerm % 2 != 0) {
-        ans *= -1;
-    }
-    if (ans == 0) {
-        cout << "The method is not applicable";
-        return 0;
-    }
-    if (n != m) {
-        cout << "The method is not applicable";
-        return 0;
+void makeBasicColumn(Matrix& table, int basic_row, int basic_col) {
+    // Make basic element 1
+    double basic_element = table.matrixData[basic_row][basic_col];
+    for (int i = 0; i < table.getColumns(); i++) {
+        table.matrixData[basic_row][i] /= basic_element;
     }
 
 
-    Matrix AugmentedMatrix(n, 2 * n);
-    IdentityMatrix I(n);
-    for (int i = 0; i < n; i++) {
-        AugmentedMatrix.matrixData[i][i] = Diagonal.matrixData[i][i];
-        for (int j = n; j < 2 * n; j++) {
-            AugmentedMatrix.matrixData[i][j] = I.matrixData[i][j - n];
+    // Nullify all elements except basic row
+    for (int i = 0; i < table.getRows(); i++) {
+        if (i == basic_row) {
+            continue;
         }
+
+        double coefficient = table.matrixData[i][basic_col];
+        for (int j = 0; j < table.getColumns(); j++) {
+            table.matrixData[i][j] -= coefficient * table.matrixData[basic_row][j];
+        }
+
     }
-    int k = 1;
-    for (int i = 0; i < n; i++) {
-        int IndMaxEl = i;
-        double maxEl = abs(Diagonal.matrixData[i][i]);
-        for (int j = i + 1; j < n; j++) {
-            if (abs(Diagonal.matrixData[j][i]) > maxEl) {
-                IndMaxEl = j;
-                maxEl = abs(Diagonal.matrixData[j][i]);
-            }
-        }
-        if (IndMaxEl > i) {
-            SquareMatrix P = PermutationMatrix(n, i + 1, IndMaxEl + 1);
-            Matrix P1 = P;
-            SquareMatrix* temp = P * Diagonal;
-            Matrix* temp1 = P1 * AugmentedMatrix;
-            Diagonal = *temp;
-            AugmentedMatrix = *temp1;
-            k++;
-        }
-        for (int j = i + 1; j < n; j++) {
-            if (Diagonal.matrixData[j][i] != 0) {
-                SquareMatrix E = EliminationMatrix(n, j + 1, i + 1, Diagonal);
-                Matrix E1 = E;
-                Matrix* temp = E1 * AugmentedMatrix;
-                SquareMatrix* temp1 = E * Diagonal;
-                AugmentedMatrix = *temp;
-                Diagonal = *temp1;
-                k++;
-            }
-        }
+}
+
+
+int main() {
+    int n_constrains, n_var;
+    cin >> n_constrains >> n_var >> PRECISION;
+
+    Matrix table(1 + n_constrains, n_var);
+    cin >> table;
+
+    // Make Z coeff negative
+    for (int i = 0; i < n_var; i++) {
+        table.matrixData[0][i] *= -1;
     }
-    for (int i = n - 1; i > -1; i--) {
-        for (int j = i - 1; j > -1; j--) {
-            if (Diagonal.matrixData[j][i] != 0) {
-                SquareMatrix E = EliminationMatrix(n, j + 1, i + 1, Diagonal);
-                Matrix E1 = E;
-                Matrix* temp = E1 * AugmentedMatrix;
-                SquareMatrix* temp1 = E * Diagonal;
-                AugmentedMatrix = *temp;
-                Diagonal = *temp1;
-                k++;
-            }
-        }
-    }
-    for (int i = 0; i < n; i++) {
-        double diag = AugmentedMatrix.matrixData[i][i];
-        for (int j = 0; j < 2 * n; j++) {
-            AugmentedMatrix.matrixData[i][j] = AugmentedMatrix.matrixData[i][j] / diag;
-        }
-    }
-    SquareMatrix InverseDiagonal(n);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            InverseDiagonal.matrixData[i][j] = AugmentedMatrix.matrixData[i][j + n];
-        }
-    }
-    Matrix* UplusL = Upper + Lower;
-    Matrix* matrixAlpha = InverseDiagonal * *UplusL;
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            if (matrixAlpha->matrixData[i][j] != 0) {
-                matrixAlpha->matrixData[i][j] = -matrixAlpha->matrixData[i][j];
-            }
-        }
-    }
-    cout << "alpha:\n";
-    cout << *matrixAlpha;
-    Matrix* matrixBeta = (Matrix)InverseDiagonal * b;
-    cout << "beta:\n";
-    cout << *matrixBeta;
-    Matrix B(n,n);
-    Matrix C(n, n);
-    for (int i = 0; i < n; i++) {
-        for (int j = i+1; j < n; j++) {
-            B.matrixData[j][i] = matrixAlpha->matrixData[j][i];
-            C.matrixData[i][j] = matrixAlpha->matrixData[i][j];
-        }
-    }
-    cout << "B:" << endl;
-    cout << B;
-    cout << "C:" << endl;
-    cout << C;
-    SquareMatrix I_B = *(SquareMatrix*)((Matrix)I - B);
-    cout << "I-B:" << endl;
-    cout << I_B;
-    
-    Matrix AugmentedMatrix1(n, 2 * n);
-    for (int i = 0; i < n; i++) {
-        for (int j = n; j < 2 * n; j++) {
-            AugmentedMatrix1.matrixData[i][j - n] = I_B.matrixData[i][j - n];
-            AugmentedMatrix1.matrixData[i][j] = I.matrixData[i][j - n];
-        }
-    }
-    k = 1;
-    for (int i = 0; i < n; i++) {
-        int IndMaxEl = i;
-        double maxEl = abs(I_B.matrixData[i][i]);
-        for (int j = i + 1; j < n; j++) {
-            if (abs(I_B.matrixData[j][i]) > maxEl) {
-                IndMaxEl = j;
-                maxEl = abs(I_B.matrixData[j][i]);
-            }
-        }
-        if (IndMaxEl > i) {
-            SquareMatrix P = PermutationMatrix(n, i + 1, IndMaxEl + 1);
-            Matrix P1 = P;
-            SquareMatrix* temp = P * I_B;
-            Matrix* temp1 = P1 * AugmentedMatrix1;
-            I_B = *temp;
-            AugmentedMatrix1 = *temp1;
-            k++;
-        }
-        for (int j = i + 1; j < n; j++) {
-            if (I_B.matrixData[j][i] != 0) {
-                SquareMatrix E = EliminationMatrix(n, j + 1, i + 1, I_B);
-                Matrix E1 = E;
-                Matrix* temp = E1 * AugmentedMatrix1;
-                SquareMatrix* temp1 = E * I_B;
-                AugmentedMatrix1 = *temp;
-                I_B = *temp1;
-                k++;
-            }
-        }
-    }
-    for (int i = n - 1; i > -1; i--) {
-        for (int j = i - 1; j > -1; j--) {
-            if (I_B.matrixData[j][i] != 0) {
-                SquareMatrix E = EliminationMatrix(n, j + 1, i + 1, I_B);
-                Matrix E1 = E;
-                Matrix* temp = E1 * AugmentedMatrix1;
-                SquareMatrix* temp1 = E * I_B;
-                AugmentedMatrix1 = *temp;
-                I_B = *temp1;
-                k++;
-            }
-        }
-    }
-    for (int i = 0; i < n; i++) {
-        double diag = AugmentedMatrix1.matrixData[i][i];
-        for (int j = 0; j < 2 * n; j++) {
-            AugmentedMatrix1.matrixData[i][j] = AugmentedMatrix1.matrixData[i][j] / diag;
-        }
-    }
-    Matrix I_B_1(n, n);
-    for (int i = 0; i < n; i++) {
-        for (int j = 0; j < n; j++) {
-            I_B_1.matrixData[i][j] = AugmentedMatrix1.matrixData[i][j + n];
-        }
-    }
-    cout << "(I-B)_-1:" << endl;
-    cout << I_B_1;
+
+    makeBasicColumn(table, 3, 1);
+    makeBasicColumn(table, 2, 0);
+    cout << table;
 
 
 
-
-    int count = 1;
-    Matrix xPrev = *matrixBeta;
-    Matrix xNew = *(*(*(I_B_1*C)*xPrev)+*(I_B_1**matrixBeta));
-    double epsilon = 0;
-    cout << "x";
-    for (int i = 0; i < m; i++) {
-        epsilon += pow(xNew.matrixData[i][0] - xPrev.matrixData[i][0], 2);
-    }
-    if (sqrt(epsilon) < epsStart) {
-        cout << "(" << count << "):" << endl;
-        cout << xNew;
-        cout << "e:" << sqrt(epsilon) << endl;
-        cout << "x~:" << endl;
-        cout << xNew;
-        return 0;
-    }
-    else {
-        cout << "(" << count << "):" << endl;
-        cout << xNew;
-        count++;
-        cout << "e:" << sqrt(epsilon) << endl;
-        epsilon = 0;
-    }
-    xPrev = xNew;
-    while (true) {
-        cout << "x";
-        Matrix xNew = *(*(*(I_B_1 * C) * xPrev) + *(I_B_1 * *matrixBeta));
-        epsilon = 0;
-        for (int i = 0; i < m; i++) {
-            epsilon += pow(xNew.matrixData[i][0] - xPrev.matrixData[i][0], 2);
-        }
-        if (sqrt(epsilon) < epsStart) {
-            cout << "(" << count << "):" << endl;
-            cout << xNew;
-            cout << "e:" << sqrt(epsilon) << endl;
-            cout << "x~:" << endl;
-            cout << xNew;
-            return 0;
-        }
-        else {
-            cout << "(" << count << "):" << endl;
-            cout << xNew;
-            cout << "e:" << sqrt(epsilon) << endl;
-            xPrev = xNew;
-            count++;
-        }
-    }
 }
