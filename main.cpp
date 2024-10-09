@@ -108,111 +108,6 @@ public:
     int getColumns() const { return m; }
 };
 
-class SquareMatrix : public Matrix {
-public:
-    SquareMatrix(int n) : Matrix(n, n) {}
-
-
-    virtual SquareMatrix* operator+(Matrix& other) override {
-        SquareMatrix* otherSquare = dynamic_cast<SquareMatrix*>(&other);
-
-        SquareMatrix* newMatrix = new SquareMatrix(n);
-        if (n == otherSquare->n) {
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < n; ++j) {
-                    newMatrix->matrixData[i][j] = matrixData[i][j] + otherSquare->matrixData[i][j];
-                }
-            }
-            return newMatrix;
-        }
-        else {
-            cout << "Error: the dimensional problem occurred" << endl;
-            return nullptr;
-        }
-    }
-
-    virtual SquareMatrix* operator-(Matrix& other) override {
-        SquareMatrix* otherSquare = dynamic_cast<SquareMatrix*>(&other);
-
-        SquareMatrix* newMatrix = new SquareMatrix(n);
-        if (n == otherSquare->n) {
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < n; ++j) {
-                    newMatrix->matrixData[i][j] = matrixData[i][j] - otherSquare->matrixData[i][j];
-                }
-            }
-            return newMatrix;
-        }
-        else {
-            cout << "Error: the dimensional problem occurred" << endl;
-            return nullptr;
-        }
-    }
-
-    virtual SquareMatrix* operator*(Matrix& other) override {
-        SquareMatrix* otherSquare = dynamic_cast<SquareMatrix*>(&other);
-
-        SquareMatrix* newMatrix = new SquareMatrix(n);
-        if (n == otherSquare->n) {
-            for (int i = 0; i < n; ++i) {
-                for (int j = 0; j < n; ++j) {
-                    for (int k = 0; k < n; ++k) {
-                        newMatrix->matrixData[i][j] += matrixData[i][k] * otherSquare->matrixData[k][j];
-                    }
-                }
-            }
-            return newMatrix;
-        }
-        else {
-            cout << "Error: the dimensional problem occurred" << endl;
-            return nullptr;
-        }
-    }
-
-    virtual SquareMatrix* transpose() override {
-        SquareMatrix* newMatrix = new SquareMatrix(n);
-
-        for (int i = 0; i < n; ++i) {
-            for (int j = 0; j < n; ++j) {
-                newMatrix->matrixData[j][i] = matrixData[i][j];
-            }
-        }
-
-        return newMatrix;
-    }
-    SquareMatrix& operator=(SquareMatrix& other) {
-        n = other.n;
-        matrixData = other.matrixData;
-        return *this;
-    }
-};
-
-class IdentityMatrix : public SquareMatrix {
-public:
-    IdentityMatrix(int n) : SquareMatrix(n) {
-        for (int i = 0; i < n; i++) {
-            matrixData[i][i] = 1;
-        }
-    }
-};
-class EliminationMatrix : public SquareMatrix {
-public:
-    EliminationMatrix(int n, int i, int j, SquareMatrix givenMatrix) : SquareMatrix(n) {
-        for (int p = 0; p < n; p++) {
-            matrixData[p][p] = 1;
-        }
-        matrixData[i - 1][j - 1] = -givenMatrix.matrixData[i - 1][j - 1] / givenMatrix.matrixData[j - 1][j - 1];
-    }
-};
-class PermutationMatrix : public SquareMatrix {
-public:
-    PermutationMatrix(int n, int i, int j) : SquareMatrix(n) {
-        for (int p = 0; p < n; p++) {
-            matrixData[p][p] = 1;
-        }
-        swap(matrixData[i - 1], matrixData[j - 1]);
-    };
-};
 
 void makeBasicColumn(Matrix& table, int basic_row, int basic_col) {
     // Make basic element 1
@@ -255,8 +150,6 @@ class Answer {
 Answer solveLLP(Matrix& C, Matrix& A, Matrix& b, int eps) {
 
 
-
-
 }
 
 
@@ -284,7 +177,13 @@ int main() {
                 basic_col = i;
             }
         }
-        if (basic_col == -1) break;
+        if (basic_col == -1) {
+            cout << "The method is not applicable!\n";
+            break;
+        };
+
+
+
         int basic_row = 0;
         int min_ratio = pow(10, 10);
         for (int i = 1; i < n_constrains+1; i++) {
@@ -294,7 +193,10 @@ int main() {
                 min_ratio = table.matrixData[i][n_var] / table.matrixData[i][basic_col];
                 }
         }
-        if (basic_row == 0) break;
+        if (basic_row == 0) {
+            cout << "The method is not applicable!\n";
+            break;
+        }
         // cout << basic_col << ' ' << basic_row << '\n';
         makeBasicColumn(table, basic_row, basic_col);
         // cout << table;
