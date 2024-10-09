@@ -178,7 +178,6 @@ int main() {
             }
         }
         if (basic_col == -1) {
-            cout << "The method is not applicable!\n";
             break;
         };
 
