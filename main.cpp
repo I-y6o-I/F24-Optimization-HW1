@@ -152,16 +152,33 @@ Answer solveLLP(Matrix& C, Matrix& A, Matrix& b, int eps) {
 
 }
 
-Matrix* concatenate(Matrix& A, Matrix& B) {
-    Matrix* newMatrix = new Matrix(A.getRows(), A.getColumns() + B.getColumns());
-    for (int i = 0; i < A.getRows(); i++) {
-        for (int j = 0; j < A.getColumns(); j++) {
-            newMatrix->matrixData[i][j] = A.matrixData[i][j];
-        }
-        for (int j = 0; j < B.getColumns(); j++) {
-            newMatrix->matrixData[i][A.getColumns()+j] = B.matrixData[i][j];
+Matrix* concatenate(Matrix& A, Matrix& B, bool dim) {
+    Matrix* newMatrix;
+    if (dim){
+        newMatrix = new Matrix(A.getRows(), A.getColumns() + B.getColumns());
+        for (int i = 0; i < A.getRows(); i++) {
+            for (int j = 0; j < A.getColumns(); j++) {
+                newMatrix->matrixData[i][j] = A.matrixData[i][j];
+            }
+            for (int j = 0; j < B.getColumns(); j++) {
+                newMatrix->matrixData[i][A.getColumns()+j] = B.matrixData[i][j];
+            }
         }
     }
+    else{
+        newMatrix = new Matrix(A.getRows()+B.getRows(), A.getColumns());
+        for (int i = 0; i < A.getRows(); i++) {
+            for (int j = 0; j < A.getColumns(); j++) {
+                newMatrix->matrixData[i][j] = A.matrixData[i][j];
+            }
+        }
+        for (int i = 0; i < B.getRows(); i++) {
+            for (int j = 0; j < B.getColumns(); j++){
+                newMatrix->matrixData[i+A.getRows()][A.getColumns()] = B.matrixData[i][j];
+            }
+        }
+    }
+
     return newMatrix;
 }
 
@@ -172,7 +189,7 @@ int main() {
     Matrix table(1 + n_constrains, n_var + 1);
     cin >> table;
 
-    Make Z coeff negative
+//    Make Z coeff negative
 
     for (int i = 0; i < n_var; i++) {
         table.matrixData[0][i] *= -1;
