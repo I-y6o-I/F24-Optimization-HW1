@@ -237,11 +237,27 @@ void makeBasicColumn(Matrix& table, int basic_row, int basic_col) {
 }
 
 // Basic test
-// 3 6 1
-// 2 3 0 -1 0 0 0
-// 2 -1 0 -2 1 0 16
-// 3 2 1 -3 0 0 18
-// -1 3 0 4 0 1 24
+//3 6 1
+//2 3 0 -1 0 0 0
+//2 -1 0 -2 1 0 16
+//3 2 1 -3 0 0 18
+//-1 3 0 4 0 1 24
+
+
+class Answer {
+    bool solver_sate;
+    Matrix solution;
+    float z;
+
+    Answer(bool state, const Matrix& sol, float z): solver_sate(state), solution(sol), z(z) {}
+};
+
+Answer solveLLP(Matrix& C, Matrix& A, Matrix& b, int eps) {
+
+
+
+
+}
 
 
 int main() {
