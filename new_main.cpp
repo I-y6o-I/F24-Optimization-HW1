@@ -256,7 +256,7 @@ Answer solveLLP(Matrix& C, Matrix& A, Matrix& b, int eps) {
 
         int basic_row = 0;
         int min_ratio = pow(10, 10);
-        for (int i = 1; i < n_constrains+1; i++) {
+        for (int i = 1; i < n_constrains; i++) {
             if (table.matrixData[i][n_var] / table.matrixData[i][basic_col] < min_ratio &&
                 table.matrixData[i][n_var] / table.matrixData[i][basic_col] > 0) {
                 basic_row = i;
