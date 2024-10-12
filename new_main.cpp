@@ -200,12 +200,41 @@ Answer solveLLP(Matrix& C, Matrix& A, Matrix& b, int eps) {
     PRECISION = eps;
 
     Matrix temp_col = *concatenate(*new Matrix(1, 1), b, false);
-    Matrix table = *concatenate(*concatenate(C, A, false), temp_col, true);
 
-    int n_var = C.getColumns();
-    int n_constrains = A.getRows();
+    Matrix tempMatrix = *new Matrix(A.getRows() + 1, A.getRows());
+    for (int i = 0; i < A.getRows(); i++) {
+        tempMatrix.matrixData[i+1][i] = 1;
+    }
+    Matrix table = *concatenate(*concatenate(C, A, false), tempMatrix, true);
+    // cout << table << endl;
 
+    for (int i = 0; i < A.getColumns(); i++) {
+        int n = -1;
+        int c = 0;
+        if (table.matrixData[0][i] == 0) {
+            for (int j = 1; j < table.getRows(); j++) {
+                if (table.matrixData[j][i] == 1) {
+                    c++;
+                    n = j;
+                }
+            }
+            // cout << c << ' ' << n << endl;
+            if (c == 1) {
+                for (int k = A.getColumns(); k < table.getColumns(); k++) {
+                    if (table.matrixData[n][k] == 1) {
+                        table.matrixData[n][k] = 0;
+                        break;
+                    }
+                }
+            }
+            // cout << table << endl;
+        }
+    }
 
+    table = *concatenate(table, temp_col, true);
+
+    int n_var = table.getColumns() - 1;
+    int n_constrains = table.getRows() -1;
 
     for (int i = 0; i < n_var; i++) {
         table.matrixData[0][i] *= -1;
@@ -225,8 +254,6 @@ Answer solveLLP(Matrix& C, Matrix& A, Matrix& b, int eps) {
             break;
         };
 
-
-
         int basic_row = 0;
         int min_ratio = pow(10, 10);
         for (int i = 1; i < n_constrains+1; i++) {
@@ -243,7 +270,7 @@ Answer solveLLP(Matrix& C, Matrix& A, Matrix& b, int eps) {
 
     }
 
-    Matrix solution = getSolution(table, *new Matrix(1, n_var));
+    Matrix solution = getSolution(table, *new Matrix(1, C.getColumns()));
     for (int i = 0; i < solution.getColumns(); i++) {
         if (solution.matrixData[0][i] < 0) {
             return Answer(false, Matrix(1, n_var), -123123);
@@ -282,7 +309,7 @@ struct Simplex {
     vector<int> B, N;
     double z;
 
-    Simplex(const vector<vector<double>> &A_, const vector<double> &b_, const vector<double> &c_) 
+    Simplex(const vector<vector<double>> &A_, const vector<double> &b_, const vector<double> &c_)
         : n(c_.size()), m(b_.size()), A(m, vector<double>(n + 1)), b(b_), c(n + 1), x(n), B(m), N(n), z(0) {
         for (int i = 0; i < m; ++i) {
             for (int j = 0; j < n; ++j) {
@@ -394,6 +421,8 @@ void runTests() {
 
     Answer ans2 = solveLLP(C, A, b, 4);
 
+    cout << ans2.solution << endl;
+
     if (ans2.solver_sate
         && compareDoubleVectors(ans2.solution.matrixData[0], vector<double> {0.5455, 8.1818, 0, 0, 23.0909, 0}, 1e-4)
         && compareDouble(ans2.z, 25.6364, 1e-4)) {
@@ -478,7 +507,6 @@ int main() {
     Matrix A(n_constrains, n_var);
     Matrix b(n_constrains, 1);
     cin >> C >> A >> b;
-
 
     Answer ans = solveLLP(C, A, b, 2);
     if (ans.solver_sate) {
