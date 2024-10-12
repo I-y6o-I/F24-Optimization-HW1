@@ -421,8 +421,6 @@ void runTests() {
 
     Answer ans2 = solveLLP(C, A, b, 4);
 
-    cout << ans2.solution << endl;
-
     if (ans2.solver_sate
         && compareDoubleVectors(ans2.solution.matrixData[0], vector<double> {0.5455, 8.1818, 0, 0, 23.0909, 0}, 1e-4)
         && compareDouble(ans2.z, 25.6364, 1e-4)) {
